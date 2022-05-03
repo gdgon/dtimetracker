@@ -3,17 +3,25 @@ import math
 
 
 class Project:
-    def __init__(self, name):
-        self.id = None
+    def __init__(self, name="Project", id=None):
+        self.id = id
         self.name = name
 
 
 class Session:
-    def __init__(self, project):
-        self.id = None
-        self.project = project
-        self.start = datetime.now().replace(microsecond=0)
-        self.end = None
+    def __str__(self):
+        return f'{self.id}, {self.project_id}, {self.start}, {self.end}'
+
+    def __init__(self, project_id, id=None, start=None, end=None):
+        self.id = id
+        self.project_id = project_id
+
+        if start is None:
+            self.start = datetime.now().replace(microsecond=0)
+        else:
+            self.start = start
+
+        self.end = end
 
     def end(self):
         self.end = datetime.now().replace(microsecond=0)
