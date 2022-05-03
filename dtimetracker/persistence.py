@@ -170,7 +170,8 @@ class SQLitePersistence(PersistenceBaseClass):
         if session.end is not None:
             end = datetime.strftime(session.end, "%F")
             cur.execute(
-                """INSERT INTO sessions (start, end, project_id) VALUES (?, ?, ?) """,
+                """INSERT INTO sessions (start, end, project_id)
+                    VALUES (?, ?, ?) """,
                 (start, end, session.project_id))
         else:
             cur.execute(
