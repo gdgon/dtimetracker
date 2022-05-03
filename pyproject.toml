@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "dtimetracker"
+version = "0.1.0"
+description = "A tool to track how much time is spent working on projects."
+authors = ["Gerry Gonzaga <gerry@gonzaga.me>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pytest-mock = "^3.7.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
