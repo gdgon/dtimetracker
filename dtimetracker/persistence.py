@@ -80,8 +80,11 @@ class SQLitePersistence(PersistenceBaseClass):
 
     @classmethod
     def delete_db(cls):
+        con = SQLitePersistence._get_connection()
+        con.close()
         if os.path.exists(SQLitePersistence._db_name):
             os.remove(SQLitePersistence._db_name)
+            SQLitePersistence._con = None
 
     @classmethod
     def get_projects(cls):
@@ -115,11 +118,14 @@ class SQLitePersistence(PersistenceBaseClass):
             """
                 UPDATE projects
                 SET name = ?
-                WHERE id = ?
+                WHERE id = ?;
             """,
             (new_name, project.id)
         )
 
-    # @classmethod
-    # def delete_project(cls, project)
-    # ######### DOOOOOOO THISS
+    @classmethod
+    def delete_project(cls, project):
+        query = "DELETE FROM projects WHERE id = ?;"
+        con = SQLitePersistence._get_connection()
+        cur = con.cursor()
+        cur.execute(query, (project.id,))
