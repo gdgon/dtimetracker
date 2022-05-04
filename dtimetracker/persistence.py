@@ -165,10 +165,10 @@ class SQLitePersistence(PersistenceBaseClass):
         con = SQLitePersistence._get_connection()
         cur = con.cursor()
 
-        start = datetime.strftime(session.start, "%F")
+        start = datetime.strftime(session.start, "%Y-%m-%d")
 
         if session.end is not None:
-            end = datetime.strftime(session.end, "%F")
+            end = datetime.strftime(session.end, "%Y-%m-%d")
             cur.execute(
                 """INSERT INTO sessions (start, end, project_id)
                     VALUES (?, ?, ?) """,
@@ -184,7 +184,7 @@ class SQLitePersistence(PersistenceBaseClass):
 
     @classmethod
     def get_session(cls, session_id):
-        query = "SELECT * FROM session WHERE id = ?;"
+        query = "SELECT * FROM sessions WHERE id = ?;"
         con = SQLitePersistence._get_connection()
         cur = con.cursor()
 
@@ -194,8 +194,8 @@ class SQLitePersistence(PersistenceBaseClass):
         session = Session(
             result[3],
             id=result[0],
-            start=datetime.strptime(result[1], "%F"),
-            end=datetime.strptime(result[2], "%F")
+            start=datetime.strptime(result[1], "%Y-%m-%d"),
+            end=datetime.strptime(result[2], "%Y-%m-%d")
         )
 
         return session
@@ -208,8 +208,8 @@ class SQLitePersistence(PersistenceBaseClass):
             AND start BETWEEN ? AND ?
         """
 
-        query_from = from_.strftime("%F")
-        query_to = to.strftime("%F")
+        query_from = from_.strftime("%Y-%m-%d")
+        query_to = to.strftime("%Y-%m-%d")
 
         con = SQLitePersistence._get_connection()
         cur = con.cursor()
