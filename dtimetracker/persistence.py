@@ -124,9 +124,11 @@ class SQLitePersistence(PersistenceBaseClass):
         cur.execute(query, (project_id,))
         result = cur.fetchone()
 
-        project = Project(name=result[1], id=result[0])
-
-        return project
+        if result is None:
+            return None
+        else:
+            project = Project(name=result[1], id=result[0])
+            return project
 
     @classmethod
     def create_project(cls, project):
@@ -165,19 +167,19 @@ class SQLitePersistence(PersistenceBaseClass):
         con = SQLitePersistence._get_connection()
         cur = con.cursor()
 
-        start = datetime.strftime(session.start, "%Y-%m-%d")
+        start = datetime.strftime(session.start, "%Y-%m-%d %H:%M:%S")
 
-        if session.end is not None:
-            end = datetime.strftime(session.end, "%Y-%m-%d")
-            cur.execute(
-                """INSERT INTO sessions (start, end, project_id)
-                    VALUES (?, ?, ?) """,
-                (start, end, session.project_id))
-        else:
+        if session.end is None:
             cur.execute(
                 """INSERT INTO sessions (start, project_id) VALUES (?, ?) """,
                 (start, session.project_id)
             )
+        else:
+            end = datetime.strftime(session.end, "%Y-%m-%d %H:%M:%S")
+            cur.execute(
+                """INSERT INTO sessions (start, end, project_id)
+                    VALUES (?, ?, ?) """,
+                (start, end, session.project_id))
 
         session.id = cur.lastrowid
         return session
@@ -191,14 +193,16 @@ class SQLitePersistence(PersistenceBaseClass):
         cur.execute(query, (session_id,))
         result = cur.fetchone()
 
-        session = Session(
-            result[3],
-            id=result[0],
-            start=datetime.strptime(result[1], "%Y-%m-%d"),
-            end=datetime.strptime(result[2], "%Y-%m-%d")
-        )
-
-        return session
+        if result is None:
+            return None
+        else:
+            session = Session(
+                result[3],
+                id=result[0],
+                start=datetime.strptime(result[1], "%Y-%m-%d %H:%M:%S"),
+                end=datetime.strptime(result[2], "%Y-%m-%d %H:%M:%S")
+            )
+            return session
 
     @classmethod
     def get_sessions(cls, project_id, from_, to):
@@ -223,10 +227,36 @@ class SQLitePersistence(PersistenceBaseClass):
             s = Session(
                 result[3],
                 id=result[0],
-                start=datetime.strptime(result[1], '%Y-%m-%d'),
-                end=datetime.strptime(result[2], '%Y-%m-%d'),
+                start=datetime.strptime(result[1], '%Y-%m-%d %H:%M:%S'),
+                end=datetime.strptime(result[2], '%Y-%m-%d %H:%M:%S'),
             )
 
             sessions.append(s)
 
         return sessions
+
+    @classmethod
+    def update_session(cls, updated_session):
+        con = SQLitePersistence._get_connection()
+        cur = con.cursor()
+
+        updated_start = updated_session.start.strftime("%Y-%m-%d %H:%M:%S")
+        updated_end = updated_session.end.strftime("%Y-%m-%d %H:%M:%S")
+
+        query = """
+            UPDATE sessions
+            SET project_id = ?, start = ?, end = ?
+            WHERE id = ?;
+        """
+
+        values = (updated_session.project_id, updated_start,
+                  updated_end, updated_session.id)
+
+        cur.execute(query, values)
+
+    @classmethod
+    def delete_session(cls, session):
+        query = "DELETE FROM sessions WHERE id = ?;"
+        con = SQLitePersistence._get_connection()
+        cur = con.cursor()
+        cur.execute(query, (session.id,))

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from dtimetracker.persistence import SQLitePersistence
 from dtimetracker.core import Project, Session
+# from unittest.mock
 
 
 def init_sqlite():
@@ -74,6 +75,13 @@ def test_can_get_project_by_id():
     assert project.name == "B Project"
 
 
+def test_get_project_returns_none():
+    init_sqlite()
+    init_projects()
+
+    assert SQLitePersistence.get_project(999) is None
+
+
 def test_can_update_project():
     init_sqlite()
     init_projects()
@@ -89,17 +97,10 @@ def test_can_delete_project():
     init_sqlite()
     init_projects()
 
-    projects_before_delete = SQLitePersistence.get_projects()
-    del_project = projects_before_delete[0]
+    project = SQLitePersistence.get_project(1)
+    SQLitePersistence.delete_project(project)
 
-    SQLitePersistence.delete_project(del_project)
-
-    projects_after_delete = SQLitePersistence.get_projects()
-
-    assert len(projects_before_delete) == 3
-    assert len(projects_after_delete) == 2
-    assert del_project.name != projects_after_delete[0].name
-    assert del_project.name != projects_after_delete[1].name
+    assert SQLitePersistence.get_project(project.id) is None
 
 
 def test_can_create_sessions_with_correct_start_time():
@@ -122,6 +123,65 @@ def test_can_get_sessions():
 
     start = datetime.now().replace(microsecond=0) - timedelta(days=2)
     end = datetime.now()
-    project0_sessions = SQLitePersistence.get_sessions(projects[0].id, start, end)
+    project0_sessions = SQLitePersistence.get_sessions(
+        projects[0].id, start, end)
 
     assert len(project0_sessions) == 2
+
+
+def test_get_session_returns_none():
+    init_sqlite()
+    init_projects()
+    init_sessions()
+
+    assert SQLitePersistence.get_session(999) is None
+
+
+def test_can_get_session_by_id():
+    init_sqlite()
+    init_projects()
+    init_sessions()
+
+    s = SQLitePersistence.get_session(4)
+
+    # TODO: Mock datetime.now to something predictable
+
+    assert s.project_id == 2
+
+
+def test_can_update_session():
+    init_sqlite()
+    init_projects()
+    init_sessions()
+
+    old_session = SQLitePersistence.get_session(1)
+
+    new_start = datetime.now().replace(microsecond=0) - timedelta(days=3)
+    new_end = new_start + timedelta(hours=5)
+    new_project_id = 2
+
+    SQLitePersistence.update_session(
+        Session(
+            new_project_id,
+            id=old_session.id,
+            start=new_start,
+            end=new_end
+        )
+    )
+
+    new_session = SQLitePersistence.get_session(old_session.id)
+
+    assert new_session.project_id == new_project_id
+    assert new_session.start == new_start
+    assert new_session.end == new_end
+
+
+def test_can_delete_session():
+    init_sqlite()
+    init_projects()
+    init_sessions()
+
+    s = SQLitePersistence.get_session(1)
+    SQLitePersistence.delete_session(s)
+
+    assert SQLitePersistence.get_session(s.id) is None

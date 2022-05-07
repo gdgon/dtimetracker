@@ -10,7 +10,7 @@ class Project:
 
 class Session:
     def __str__(self):
-        return f'{self.id}, {self.project_id}, {self.start}, {self.end}'
+        return (f'sid: {self.id}, pid: {self.project_id}, start: {self.start}, end: {self.end}')  # NOQA
 
     def __init__(self, project_id, id=None, start=None, end=None):
         self.id = id
