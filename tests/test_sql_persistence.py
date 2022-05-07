@@ -19,30 +19,28 @@ def init_projects():
 
 
 def init_sessions():
-    projects = SQLitePersistence.get_projects()
-
-    session1 = Session(projects[0].id)
+    session1 = Session(1)
     session1.start = (datetime.now().replace(microsecond=0)
                       - timedelta(days=3))
     session1.end = session1.start + timedelta(hours=6, minutes=30, seconds=20)
 
-    session2 = Session(projects[0].id)
+    session2 = Session(1)
     session2.start = (datetime.now().replace(microsecond=0)
                       - timedelta(days=2))
     session2.end = session2.start + timedelta(hours=6, minutes=20, seconds=20)
 
-    session3 = Session(projects[0].id)
+    session3 = Session(1)
     session3.start = (datetime.now().replace(microsecond=0)
                       - timedelta(days=1))
     session3.end = session3.start + timedelta(hours=8, minutes=30, seconds=20)
 
-    session4 = Session(projects[1].id)
+    session4 = Session(2)
     session4.start = (datetime.now().replace(microsecond=0)
                       - timedelta(days=3))
     session4.end = (session4.start
                     + timedelta(days=1, hours=8, minutes=30, seconds=20))
 
-    session5 = Session(projects[1].id)
+    session5 = Session(2)
     session5.start = (datetime.now().replace(microsecond=0)
                       - timedelta(days=1))
     session5.end = session5.start + timedelta(hours=8, minutes=30)
@@ -185,3 +183,21 @@ def test_can_delete_session():
     SQLitePersistence.delete_session(s)
 
     assert SQLitePersistence.get_session(s.id) is None
+
+
+def test_get_open_session_works():
+    init_sqlite()
+    init_projects()
+    init_sessions()
+
+    s = SQLitePersistence.get_session(2)
+    s.end = None
+    SQLitePersistence.update_session(s)
+    result = SQLitePersistence.get_open_session(1)
+    assert result.id == s.id
+    assert result.project_id == s.project_id
+    assert result.start == s.start
+
+    s.end = s.start + timedelta(hours=8)
+    SQLitePersistence.update_session(s)
+    assert SQLitePersistence.get_open_session(1) is None

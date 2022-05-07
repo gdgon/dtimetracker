@@ -9,6 +9,20 @@ class Project:
 
 
 class Session:
+    @classmethod
+    def from_sql_result(cls, result):
+        s = Session(
+            result[3],
+            id=result[0],
+            start=datetime.strptime(result[1], '%Y-%m-%d %H:%M:%S'),
+            end=None
+        )
+
+        if result[2] is not None:
+            s.end = datetime.strptime(result[2], "%Y-%m-%d %H:%M:%S")
+
+        return s
+
     def __str__(self):
         return (f'sid: {self.id}, pid: {self.project_id}, start: {self.start}, end: {self.end}')  # NOQA
 
@@ -35,7 +49,7 @@ class Session:
             now = datetime.now().replace(microsecond=0)
             hours, minutes = self._compute_time_difference(self.start, now)
 
-        elif type(self.end) == datetime:
+        elif isinstance(self.end, datetime):
             hours, minutes = self._compute_time_difference(
                 self.start, self.end)
 
@@ -47,6 +61,3 @@ class Session:
         minutes = (difference.total_seconds() % 3600) / 60
 
         return (hours, minutes)
-
-    def project_has_no_open_sessions(project):
-        pass

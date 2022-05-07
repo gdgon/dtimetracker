@@ -2,6 +2,7 @@ from dtimetracker.core import Project, Session
 from datetime import datetime, timedelta
 import pytest
 
+
 def test_can_edit_project_name():
     p = Project("Test Project")
     p.name = "Renamed Project"
@@ -13,6 +14,7 @@ def test_project():
     p = Project("Test Project")
     p.id = 1
     return p
+
 
 def test_can_create_session(test_project):
     s = Session(test_project)

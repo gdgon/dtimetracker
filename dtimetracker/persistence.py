@@ -196,13 +196,7 @@ class SQLitePersistence(PersistenceBaseClass):
         if result is None:
             return None
         else:
-            session = Session(
-                result[3],
-                id=result[0],
-                start=datetime.strptime(result[1], "%Y-%m-%d %H:%M:%S"),
-                end=datetime.strptime(result[2], "%Y-%m-%d %H:%M:%S")
-            )
-            return session
+            return Session.from_sql_result(result)
 
     @classmethod
     def get_sessions(cls, project_id, from_, to):
@@ -224,13 +218,7 @@ class SQLitePersistence(PersistenceBaseClass):
 
         sessions = []
         for result in results:
-            s = Session(
-                result[3],
-                id=result[0],
-                start=datetime.strptime(result[1], '%Y-%m-%d %H:%M:%S'),
-                end=datetime.strptime(result[2], '%Y-%m-%d %H:%M:%S'),
-            )
-
+            s = Session.from_sql_result(result)
             sessions.append(s)
 
         return sessions
@@ -241,7 +229,13 @@ class SQLitePersistence(PersistenceBaseClass):
         cur = con.cursor()
 
         updated_start = updated_session.start.strftime("%Y-%m-%d %H:%M:%S")
-        updated_end = updated_session.end.strftime("%Y-%m-%d %H:%M:%S")
+
+        updated_end = ""
+
+        if updated_session.end is None:
+            updated_end = None
+        else:
+            updated_end = updated_session.end.strftime("%Y-%m-%d %H:%M:%S")
 
         query = """
             UPDATE sessions
@@ -260,3 +254,23 @@ class SQLitePersistence(PersistenceBaseClass):
         con = SQLitePersistence._get_connection()
         cur = con.cursor()
         cur.execute(query, (session.id,))
+
+    @classmethod
+    def get_open_session(cls, project_id):
+        con = SQLitePersistence._get_connection()
+        cur = con.cursor()
+
+        query = """
+            SELECT * FROM sessions WHERE
+            project_id = ?
+            AND end IS NULL;
+        """
+
+        cur.execute(query, (project_id,))
+
+        result = cur.fetchone()
+
+        if result is None:
+            return None
+        else:
+            return Session.from_sql_result(result)
