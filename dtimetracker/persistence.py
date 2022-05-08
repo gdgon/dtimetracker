@@ -68,7 +68,7 @@ class SQLitePersistence(PersistenceBaseClass):
         create_projects_query = """
             CREATE TABLE IF NOT EXISTS projects (
                 id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL
+                name TEXT NOT NULL UNIQUE
             );
         """
 
