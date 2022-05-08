@@ -131,6 +131,21 @@ class SQLitePersistence(PersistenceBaseClass):
             return project
 
     @classmethod
+    def get_project_by_name(cls, project_name):
+        query = "SELECT * FROM projects WHERE name = ?;"
+        con = SQLitePersistence._get_connection()
+        cur = con.cursor()
+
+        cur.execute(query, (project_name,))
+        result = cur.fetchone()
+
+        if result is None:
+            return None
+        else:
+            project = Project(name=result[1], id=result[0])
+            return project
+
+    @classmethod
     def create_project(cls, project):
         con = SQLitePersistence._get_connection()
         cur = con.cursor()

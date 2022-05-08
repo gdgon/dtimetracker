@@ -61,3 +61,24 @@ class Session:
         minutes = (difference.total_seconds() % 3600) / 60
 
         return (hours, minutes)
+
+    @classmethod
+    def compute_total_duration(cls, sessions):
+        total_hours = 0
+        total_minutes = 0
+        total_seconds = 0
+
+        for session in sessions:
+            d = session.compute_duration()
+            total_hours += d[0]
+            total_minutes += d[1]
+
+        if total_minutes >= 60:
+            total_hours += total_minutes // 60
+            total_minutes = total_minutes % 60
+
+        if total_seconds >= 60:
+            total_minutes += total_seconds // 60
+            total_seconds = total_seconds % 60
+
+        return (int(total_hours), int(total_minutes), int(total_seconds))

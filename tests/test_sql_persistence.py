@@ -73,6 +73,16 @@ def test_can_get_project_by_id():
     assert project.name == "B Project"
 
 
+def test_can_get_project_by_name():
+    init_sqlite()
+    init_projects()
+    init_sessions()
+
+    project_name = SQLitePersistence.get_project_by_name("B Project").name
+    assert project_name == "B Project"
+
+
+
 def test_get_project_returns_none():
     init_sqlite()
     init_projects()
@@ -201,3 +211,16 @@ def test_get_open_session_works():
     s.end = s.start + timedelta(hours=8)
     SQLitePersistence.update_session(s)
     assert SQLitePersistence.get_open_session(1) is None
+
+
+def test_can_compute_total_session_duration():
+    init_sqlite()
+    init_projects()
+    init_sessions()
+
+    start_date = datetime.now() - timedelta(days=30)
+    end_date = datetime.now()
+    sessions = SQLitePersistence.get_sessions(1, start_date, end_date)
+
+    result = Session.compute_total_duration(sessions)
+    assert result == (21, 21, 0)
