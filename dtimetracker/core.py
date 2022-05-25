@@ -29,15 +29,10 @@ class Session:
     def __init__(self, project_id, id=None, start=None, end=None):
         self.id = id
         self.project_id = project_id
-
-        if start is None:
-            self.start = datetime.now().replace(microsecond=0)
-        else:
-            self.start = start
-
+        self.start = start
         self.end = end
 
-    def end(self):
+    def stop(self):
         self.end = datetime.now().replace(microsecond=0)
 
     # Returns a 2-ple with total hours and minutes
@@ -54,6 +49,11 @@ class Session:
                 self.start, self.end)
 
         return (max(hours, 0), max(minutes, 0))
+
+
+    def get_pretty_duration(self):
+        hours, minutes = self.compute_duration()
+        return str(hours) + ":" + str(math.floor(minutes))
 
     def _compute_time_difference(self, start, end):
         difference = end - start

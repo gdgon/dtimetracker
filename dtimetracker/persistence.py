@@ -53,6 +53,14 @@ class SQLitePersistence(PersistenceBaseClass):
     _con = None
 
     @classmethod
+    def get_project_names(cls):
+        projects = SQLitePersistence.get_projects()
+        project_names = []
+        for project in projects:
+            project_names.append(project.name)
+        return project_names
+
+    @classmethod
     def _get_connection(cls):
         if SQLitePersistence._con is None:
             con = sqlite3.connect(SQLitePersistence._db_name)
@@ -88,6 +96,8 @@ class SQLitePersistence(PersistenceBaseClass):
         cur.execute(create_projects_query)
         cur.execute(create_sessions_table_query)
 
+        con.commit()
+
     @classmethod
     def init_db(cls):
         SQLitePersistence._create_tables()
@@ -96,6 +106,7 @@ class SQLitePersistence(PersistenceBaseClass):
     @classmethod
     def delete_db(cls):
         con = SQLitePersistence._get_connection()
+        con.commit()
         con.close()
         if os.path.exists(SQLitePersistence._db_name):
             os.remove(SQLitePersistence._db_name)
@@ -146,16 +157,17 @@ class SQLitePersistence(PersistenceBaseClass):
             return project
 
     @classmethod
-    def create_project(cls, project):
+    def create_project(cls, project_name):
         con = SQLitePersistence._get_connection()
         cur = con.cursor()
         cur.execute(
             """INSERT INTO projects (name) VALUES (?) """,
-            (project.name,)
+            (project_name,)
         )
+        con.commit()
 
-        project.id = cur.lastrowid
-        return project
+        p = Project(name=project_name, id=cur.lastrowid)
+        return p
 
     @classmethod
     def update_project(cls, project, new_name):
@@ -169,6 +181,7 @@ class SQLitePersistence(PersistenceBaseClass):
             """,
             (new_name, project.id)
         )
+        con.commit()
 
     @classmethod
     def delete_project(cls, project):
@@ -176,28 +189,38 @@ class SQLitePersistence(PersistenceBaseClass):
         con = SQLitePersistence._get_connection()
         cur = con.cursor()
         cur.execute(query, (project.id,))
+        con.commit()
 
     @classmethod
-    def create_session(cls, session):
+    def create_session(cls, project_id, start_=None, end_=None):
         con = SQLitePersistence._get_connection()
         cur = con.cursor()
 
-        start = datetime.strftime(session.start, "%Y-%m-%d %H:%M:%S")
+        start = None
+        if start_ is None:
+            start = (datetime.now()
+                     .replace(microsecond=0)
+                     .strftime("%Y-%m-%d %H:%M:%S"))
+        else:
+            start = (start_
+                     .replace(microsecond=0)
+                     .strftime("%Y-%m-%d %H:%M:%S"))
 
-        if session.end is None:
+        if end_ is None:
             cur.execute(
                 """INSERT INTO sessions (start, project_id) VALUES (?, ?) """,
-                (start, session.project_id)
+                (start, project_id)
             )
         else:
-            end = datetime.strftime(session.end, "%Y-%m-%d %H:%M:%S")
+            end = datetime.strftime(end_, "%Y-%m-%d %H:%M:%S")
             cur.execute(
                 """INSERT INTO sessions (start, end, project_id)
                     VALUES (?, ?, ?) """,
-                (start, end, session.project_id))
+                (start, end, project_id))
 
-        session.id = cur.lastrowid
-        return session
+        id = cur.lastrowid
+        con.commit()
+        return SQLitePersistence.get_session(id)
 
     @classmethod
     def get_session(cls, session_id):
@@ -221,8 +244,8 @@ class SQLitePersistence(PersistenceBaseClass):
             AND start BETWEEN ? AND ?
         """
 
-        query_from = from_.strftime("%Y-%m-%d")
-        query_to = to.strftime("%Y-%m-%d")
+        query_from = from_.strftime("%Y-%m-%d %H:%M:%S")
+        query_to = to.strftime("%Y-%m-%d %H:%M:%S")
 
         con = SQLitePersistence._get_connection()
         cur = con.cursor()
@@ -262,6 +285,7 @@ class SQLitePersistence(PersistenceBaseClass):
                   updated_end, updated_session.id)
 
         cur.execute(query, values)
+        con.commit()
 
     @classmethod
     def delete_session(cls, session):
@@ -269,6 +293,7 @@ class SQLitePersistence(PersistenceBaseClass):
         con = SQLitePersistence._get_connection()
         cur = con.cursor()
         cur.execute(query, (session.id,))
+        con.commit()
 
     @classmethod
     def get_open_session(cls, project_id):

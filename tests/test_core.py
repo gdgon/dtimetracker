@@ -16,12 +16,6 @@ def test_project():
     return p
 
 
-def test_can_create_session(test_project):
-    s = Session(test_project)
-    t = datetime.now().replace(microsecond=0)
-    assert s.start == t
-
-
 def test_can_compute_ended_session(test_project):
     expected_hours = 3
     expected_minutes = 33
